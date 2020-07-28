@@ -1,0 +1,99 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558 
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compile with mlpack",
+            "command": "g++",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/executables/${fileBasenameNoExtension}",
+                "-std=c++11",
+                "-fopenmp",
+                "-I/home/nishantkr18/mlpack/build/include",
+                "-L/home/nishantkr18/mlpack/build/lib",
+                "-lmlpack",
+                "-larmadillo",
+                "-lboost_serialization",
+                "-lboost_program_options"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "/usr/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+        {
+            "label": "Only run",
+            "type": "shell",
+            "command": "${fileDirname}/executables/${fileBasenameNoExtension}",
+            "args": [],
+            "problemMatcher": [],
+            "group": "build",
+        },
+        {
+            "label": "Compile and run mlpack",
+            "type": "shell",
+            "command": "${fileDirname}/executables/${fileBasenameNoExtension}",
+            "args": [],
+            "dependsOn": [
+                "compile with mlpack"
+            ],
+            "problemMatcher": [],
+            "group": "build",
+            "presentation": {
+                // "clear": true,
+                // "panel": "new",
+                // "focus": true,
+                // "showReuseMessage": true,
+                // "reveal": "silent"
+            }
+        },
+        {
+            "label": "compile with mlpack for gym_tcp_api",
+            "command": "g++",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/executables/${fileBasenameNoExtension}",
+                "-std=c++11",
+                "-fopenmp",
+                "-I/home/nishantkr18/mlpack/build/include",
+                "-L/home/nishantkr18/mlpack/build/lib",
+                "-lmlpack",
+                "-larmadillo",
+                "-lboost_serialization",
+                "-I/home/nishantkr18/gym_tcp_api/cpp/pjson -I/home/nishantkr18/gym_tcp_api/cpp/build -I/home/nishantkr18/gym_tcp_api/cpp -O3 -fPIC -ffast-math -rdynamic  -lboost_chrono -lboost_date_time -lboost_regex -lpthread",
+                "-DBOOST_ALL_NO_LIB -DBOOST_ATOMIC_DYN_LINK -DBOOST_IOSTREAMS_DYN_LINK -DBOOST_SYSTEM_DYN_LINK -DBOOST_THREAD_DYN_LINK",
+                "/usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0",
+                "/usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0",
+                "/usr/lib/x86_64-linux-gnu/libboost_iostreams.so.1.71.0",
+                "/usr/lib/x86_64-linux-gnu/libboost_atomic.so.1.71.0",
+            ],
+            "problemMatcher": [],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        },
+    ]
+}
