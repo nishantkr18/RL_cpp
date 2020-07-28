@@ -25,15 +25,14 @@ int main()
   mlpack::math::RandomSeed(std::time(NULL));
   // Set up the policy and replay method.
   GreedyPolicy<CartPole> policy(1.0, 1000, 0.1, 1.0);
-  RandomReplay<CartPole> replayMethod(32, 10000);
+  RandomReplay<CartPole> replayMethod(1, 10000);
 
   TrainingConfig config;
   config.StepSize() = 0.001;
   config.Discount() = 0.99;
-  config.TargetNetworkSyncInterval() = 200;
-  config.ExplorationSteps() = 64;
+  config.TargetNetworkSyncInterval() = 100;
+  config.ExplorationSteps() = 0;
   config.DoubleQLearning() = false;
-  config.StepLimit() = 200;
   config.IsCategorical() = true;
 
   CategoricalDQN<> model(4, 128, 128, 2);

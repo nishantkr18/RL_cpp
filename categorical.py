@@ -71,11 +71,9 @@ class Network(nn.Module):
         self.atom_size = atom_size
         
         self.layers = nn.Sequential(
-            nn.Linear(in_dim, 128),
+            nn.Linear(in_dim, 64),
             nn.ReLU(), 
-            nn.Linear(128, 128),
-            nn.ReLU(), 
-            nn.Linear(128, out_dim * atom_size)
+            nn.Linear(64, out_dim * atom_size)
         )
         self.apply(weights_init_)
 
@@ -318,56 +316,12 @@ class DQNAgent:
                 # if hard update is needed
                 if update_cnt % self.target_update == 0:
                     self._target_hard_update()
-
-            # plotting
-            if frame_idx % plotting_interval == 0:
-                self._plot(frame_idx, scores, losses, epsilons)
                 
-        self.env.close()
-                
-    def test(self) -> None:
-        """Test the agent."""
-        self.is_test = True
-        
-        state = self.env.reset()
-        done = False
-        score = 0
-        
-        while not done:
-            self.env.render()
-            action = self.select_action(state)
-            next_state, reward, done = self.step(action)
-
-            state = next_state
-            score += reward
-        
-        print("score: ", score)
         self.env.close()
 
     def _target_hard_update(self):
         """Hard update: target <- local."""
         self.dqn_target.load_state_dict(self.dqn.state_dict())
-                
-    def _plot(
-        self, 
-        frame_idx: int, 
-        scores: List[float], 
-        losses: List[float], 
-        epsilons: List[float],
-    ):
-        """Plot the training progresses."""
-        clear_output(True)
-        plt.figure(figsize=(20, 5))
-        plt.subplot(131)
-        plt.title('frame %s. score: %s' % (frame_idx, np.mean(scores[-10:])))
-        plt.plot(scores)
-        plt.subplot(132)
-        plt.title('loss')
-        plt.plot(losses)
-        plt.subplot(133)
-        plt.title('epsilons')
-        plt.plot(epsilons)
-        plt.show()
 
 # environment
 env_id = "CartPole-v0"
