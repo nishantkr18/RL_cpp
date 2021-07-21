@@ -24,8 +24,8 @@ using namespace mlpack::rl;
 int main(int argc, char *argv[])
 {
     mlpack::math::RandomSeed(std::time(NULL));
-    ContinuousActionEnv::State::dimension = 3;
-    ContinuousActionEnv::Action::size = 1;
+    ContinuousActionEnv::State::dimension = 24;
+    ContinuousActionEnv::Action::size = 4;
 
     TrainingConfig config;
     config.StepSize() = 0.001;
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 
     FFN<EmptyLoss<>, GaussianInitialization>
         learningQNetwork(EmptyLoss<>(), GaussianInitialization(0, 0.1));
-    learningQNetwork.Add(new Linear<>(3 + 1, 128));
+    learningQNetwork.Add(new Linear<>(ContinuousActionEnv::State::dimension + ContinuousActionEnv::Action::size, 128));
     learningQNetwork.Add(new ReLULayer<>());
     learningQNetwork.Add(new Linear<>(128, 1));
 
@@ -47,9 +47,9 @@ int main(int argc, char *argv[])
 
     FFN<EmptyLoss<>, GaussianInitialization>
         policyNetwork(EmptyLoss<>(), GaussianInitialization(0, 0.1));
-    policyNetwork.Add(new Linear<>(3, 128));
+    policyNetwork.Add(new Linear<>(ContinuousActionEnv::State::dimension, 128));
     policyNetwork.Add(new ReLULayer<>());
-    policyNetwork.Add(new Linear<>(128, 1));
+    policyNetwork.Add(new Linear<>(128, ContinuousActionEnv::Action::size));
     policyNetwork.Add(new TanHLayer<>());
 
     if (learningQNetwork.Parameters().is_empty())
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     // Set up the policy and replay method.
     RandomReplay<ContinuousActionEnv> replayMethod(32, 10000);
 
-    Environment env("127.0.0.1", "4040", "Pendulum-v0");
+    Environment env("127.0.0.1", "4040", "BipedalWalker-v3");
 
     std::vector<double> returnList;
     size_t episodes = 0;

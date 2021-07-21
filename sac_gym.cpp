@@ -24,35 +24,40 @@ using namespace mlpack::rl;
 int main(int argc, char *argv[])
 {
     mlpack::math::RandomSeed(std::time(NULL));
-    ContinuousActionEnv::State::dimension = 3;
-    ContinuousActionEnv::Action::size = 1;
+    ContinuousActionEnv::State::dimension = 24;
+    ContinuousActionEnv::Action::size = 4;
 
     TrainingConfig config;
+    config.ExplorationSteps() = 2000;
     config.StepSize() = 0.001;
     config.TargetNetworkSyncInterval() = 1;
-    config.UpdateInterval() = 3;
+    config.UpdateInterval() = 1;
 
     FFN<EmptyLoss<>, GaussianInitialization>
-        policyNetwork(EmptyLoss<>(), GaussianInitialization(0, 0.1));
-    policyNetwork.Add(new Linear<>(3, 128));
+        policyNetwork(EmptyLoss<>(), GaussianInitialization(0, 0.01));
+    policyNetwork.Add(new Linear<>(ContinuousActionEnv::State::dimension, 128));
     policyNetwork.Add(new ReLULayer<>());
-    policyNetwork.Add(new Linear<>(128, 1));
+    policyNetwork.Add(new Linear<>(128, 128));
+    policyNetwork.Add(new ReLULayer<>());
+    policyNetwork.Add(new Linear<>(128, ContinuousActionEnv::Action::size));
     policyNetwork.Add(new TanHLayer<>());
 
     FFN<EmptyLoss<>, GaussianInitialization>
-        qNetwork(EmptyLoss<>(), GaussianInitialization(0, 0.1));
-    qNetwork.Add(new Linear<>(3 + 1, 128));
+        qNetwork(EmptyLoss<>(), GaussianInitialization(0, 0.01));
+    qNetwork.Add(new Linear<>(ContinuousActionEnv::State::dimension + ContinuousActionEnv::Action::size, 128));
+    qNetwork.Add(new ReLULayer<>());
+    qNetwork.Add(new Linear<>(128, 128));
     qNetwork.Add(new ReLULayer<>());
     qNetwork.Add(new Linear<>(128, 1));
 
     // Set up the policy and replay method.
-    RandomReplay<ContinuousActionEnv> replayMethod(32, 10000);
+    RandomReplay<ContinuousActionEnv> replayMethod(32, 100000);
 
     // Set up Soft actor-critic agent.
     SAC<ContinuousActionEnv, decltype(qNetwork), decltype(policyNetwork), AdamUpdate>
         agent(config, qNetwork, policyNetwork, replayMethod);
 
-    const std::string environment = "Pendulum-v0";
+    const std::string environment = "BipedalWalker-v3";
     const std::string host = "127.0.0.1";
     const std::string port = "4040";
 
@@ -66,11 +71,12 @@ int main(int argc, char *argv[])
     {
         double episodeReturn = 0;
         env.reset();
+        size_t steps = 0;
         do
         {
             agent.State().Data() = env.observation;
             agent.SelectAction();
-            arma::mat action = {agent.Action().action[0]};
+            arma::mat action = {agent.Action().action};
 
             env.step(action);
             ContinuousActionEnv::State nextState;
@@ -79,6 +85,7 @@ int main(int argc, char *argv[])
             replayMethod.Store(agent.State(), agent.Action(), env.reward, nextState, env.done, 0.99);
             episodeReturn += env.reward;
             agent.TotalSteps()++;
+            steps++;
             if (agent.Deterministic() || agent.TotalSteps() < config.ExplorationSteps())
                 continue;
             for (size_t i = 0; i < config.UpdateInterval(); i++)
@@ -96,15 +103,15 @@ int main(int argc, char *argv[])
 
         std::cout << "Average return in last " << returnList.size()
                   << " consecutive episodes: " << averageReturn
+                  << " steps: " << steps
                   << " Episode return: " << episodeReturn << std::endl;
 
-        if (episodes > 1000)
+        if (episodes % 10 == 0)
         {
-            std::cout << "Cart Pole with DQN failed." << std::endl;
-            converged = false;
-            break;
+            data::Save("./" + std::to_string(episodes) + "qNetwork.xml", "episode_" + std::to_string(episodes), qNetwork);
+            data::Save("./" + std::to_string(episodes) + "policyNetwork.xml", "episode_" + std::to_string(episodes), policyNetwork);
         }
-        if (averageReturn > -400)
+        if (averageReturn > -10)
             break;
     }
     env.compression(9);
@@ -123,7 +130,7 @@ int main(int argc, char *argv[])
         {
             agent.State().Data() = env.observation;
             agent.SelectAction();
-            arma::mat action = {agent.Action().action[0]};
+            arma::mat action = {agent.Action().action};
 
             env.step(action);
             currentReward += env.reward;

@@ -11,12 +11,13 @@ using namespace mlpack;
 
 int main()
 {
-    mlpack::math::RandomSeed(std::time(NULL));
-    // 3 x 2
-    FFN<EmptyLoss<>, GaussianInitialization>
-        qNetwork(EmptyLoss<>(), GaussianInitialization(0, 1));
-    qNetwork.Add<Linear<>>(4, 2);
-    qNetwork.Add(new ReLULayer<>());
-    qNetwork.Add(new Linear<>(2, 4));
-    qNetwork.ResetParameters();
+  arma::mat input = arma::mat("-0.1; 0.9");
+  arma::mat output, gy = arma::mat("2; 1"), g;
+  // May be I am not using 'gy' in correct way.
+
+  LogSoftMax<> module;
+  module.Forward(input, output);
+  output.print("Forward:");
+  module.Backward(output, gy, g);
+  g.print("Backward:");
 }

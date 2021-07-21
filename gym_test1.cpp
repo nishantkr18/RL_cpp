@@ -25,8 +25,8 @@ using namespace mlpack::rl;
 int main(int argc, char *argv[])
 {
     mlpack::math::RandomSeed(std::time(NULL));
-    DiscreteActionEnv::State::dimension = 3;
-    DiscreteActionEnv::Action::size = 3;
+    DiscreteActionEnv::State::dimension = 8;
+    DiscreteActionEnv::Action::size = 4;
 
     // Set up the network.
     FFN<MeanSquaredError<>, GaussianInitialization> network(
@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     TrainingConfig config;
     config.ExplorationSteps() = 100;
 
-    const std::string environment = "Pendulum-v0";
+    const std::string environment = "LunarLander-v2";
     const std::string host = "127.0.0.1";
     const std::string port = "4040";
 
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         {
             agent.State().Data() = env.observation;
             agent.SelectAction();
-            arma::mat action = {double(agent.Action().action) - 1.0};
+            arma::mat action = {double(agent.Action().action)};
 
             env.step(action);
             action = env.action_space.sample();
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             converged = false;
             break;
         }
-        if (averageReturn > -400)
+        if (averageReturn > 0)
             break;
     }
     env.compression(9);
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
         {
             agent.State().Data() = env.observation;
             agent.SelectAction();
-            arma::mat action = {double(agent.Action().action) - 1.0};
+            arma::mat action = {double(agent.Action().action)};
 
             env.step(action);
             currentReward += env.reward;
